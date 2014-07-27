@@ -1,12 +1,31 @@
 security:
     providers:
-        in_memory:
-            memory: ~
+        token:
+            id: token_user_provider
+        api_key:
+            id: apikey_user_provider
+
+    encoders:
+        Symfony\Component\Security\Core\User\User: plaintext
+
+    role_hierarchy:
+        ROLE_API_USER: ROLE_USER
 
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
 
-        default:
-            anonymous: ~
+        api_tokens:
+            pattern: ^/api/tokens
+            stateless: true
+            token: ~
+
+        api:
+            pattern: ^/api
+            stateless: true
+            simple_preauth:
+                authenticator: apikey_authenticator
+
+    access_control:
+        - { path: ^/api/hello, roles: ROLE_API_USER }

@@ -1,0 +1,26 @@
+services:
+    token_user_provider:
+        class: Acme\ApiBundle\Security\User\TokenUserProvider
+
+    token_authentication_listener:
+        class: Acme\ApiBundle\Security\Firewall\TokenAuthenticationListener
+        arguments:
+            - @security.context
+            - @security.authentication.manager
+            - null # provider-shared key
+
+    token_authentication_provider:
+        class: Acme\ApiBundle\Security\Authentication\TokenAuthenticationProvider
+        arguments:
+            - @token_user_provider
+            - @security.user_checker
+            - null # provider-shared key
+            - @security.encoder_factory
+
+    apikey_user_provider:
+        class: Acme\ApiBundle\Security\User\ApiKeyUserProvider
+
+    apikey_authenticator:
+        class: Acme\ApiBundle\Security\Authentication\ApiKeyAuthenticator
+        arguments:
+            - @apikey_user_provider
