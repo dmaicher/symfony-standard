@@ -2,9 +2,11 @@
 
 namespace Acme\ApiBundle\Security\Firewall;
 
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\Security\Core\Authentication\AuthenticationManagerInterface;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\AuthenticationServiceException;
 use Symfony\Component\Security\Core\SecurityContextInterface;
 use Symfony\Component\Security\Http\Firewall\ListenerInterface;
@@ -46,12 +48,17 @@ class TokenAuthenticationListener implements ListenerInterface
 
         $data = json_decode($request->getContent(), true);
 
-        if (null === $token = $this->createToken($data)) {
-            throw new AuthenticationServiceException('Invalid JSON!');
+        if (is_array($data) && $token = $this->createToken($data)) {
+            try {
+                $token = $this->authenticationManager->authenticate($token);
+                $this->securityContext->setToken($token);
+
+                return;
+            }
+            catch(AuthenticationException $e) {}
         }
 
-        $token = $this->authenticationManager->authenticate($token);
-        $this->securityContext->setToken($token);
+        $event->setResponse(new Response('', Response::HTTP_UNAUTHORIZED));
     }
 
     /**
